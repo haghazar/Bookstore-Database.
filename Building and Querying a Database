@@ -1,0 +1,103 @@
+-- Create BookstoreDB
+CREATE DATABASE IF NOT EXISTS BookstoreDB;
+USE BookstoreDB;
+
+-- Create Books Table
+CREATE TABLE IF NOT EXISTS Books (
+    BookID INT PRIMARY KEY,
+    Title VARCHAR(255),
+    Author VARCHAR(255),
+    Genre VARCHAR(50),
+    Price DECIMAL(10, 2),
+    QuantityInStock INT
+);
+
+-- Create Customers Table
+CREATE TABLE IF NOT EXISTS Customers (
+    CustomerID INT PRIMARY KEY,
+    Name VARCHAR(255),
+    Email VARCHAR(255),
+    Phone VARCHAR(20)
+);
+
+-- Create Sales Table
+CREATE TABLE IF NOT EXISTS Sales (
+    SaleID INT PRIMARY KEY,
+    BookID INT,
+    CustomerID INT,
+    DateOfSale DATE,
+    QuantitySold INT,
+    TotalPrice DECIMAL(10, 2),
+    FOREIGN KEY (BookID) REFERENCES Books(BookID),
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+-- Insert sample data into Books Table
+INSERT INTO Books VALUES
+(1, 'The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', 15.99, 100),
+(2, 'To Kill a Mockingbird', 'Harper Lee', 'Fiction', 12.99, 50),
+(3, '1984', 'George Orwell', 'Dystopian', 10.99, 75),
+(4, 'The Hobbit', 'J.R.R. Tolkien', 'Fantasy', 19.99, 120),
+(5, 'Sapiens', 'Yuval Noah Harari', 'Non-Fiction', 24.99, 30),
+(6, 'The Catcher in the Rye', 'J.D. Salinger', 'Classic', 14.99, 80),
+(7, 'The Alchemist', 'Paulo Coelho', 'Fantasy', 18.99, 90),
+(8, 'Brave New World', 'Aldous Huxley', 'Dystopian', 11.99, 60),
+(9, 'The Da Vinci Code', 'Dan Brown', 'Mystery', 21.99, 110),
+(10, 'The Lord of the Rings', 'J.R.R. Tolkien', 'Fantasy', 29.99, 150);
+
+-- Insert sample data into Customers Table
+INSERT INTO Customers VALUES
+(1, 'Alice Johnson', 'alice@email.com', '123-456-7890'),
+(2, 'Bob Smith', 'bob@email.com', '987-654-3210'),
+(3, 'Charlie Brown', 'charlie@email.com', '555-555-5555'),
+(4, 'Diana Miller', 'diana@email.com', '333-333-3333'),
+(5, 'Edward Davis', 'edward@email.com', '999-999-9999');
+
+-- Insert sample data into Sales Table
+INSERT INTO Sales VALUES
+(1, 1, 1, '2023-01-01', 2, 31.98),
+(2, 2, 2, '2023-02-15', 1, 12.99),
+(3, 3, 3, '2023-03-10', 3, 32.97),
+(4, 4, 4, '2023-04-20', 1, 19.99),
+(5, 5, 5, '2023-05-05', 2, 49.98),
+(6, 6, 1, '2023-06-15', 1, 14.99),
+(7, 7, 2, '2023-07-01', 2, 37.98),
+(8, 8, 3, '2023-08-12', 1, 11.99),
+(9, 9, 4, '2023-09-25', 3, 65.97),
+(10, 10, 5, '2023-10-10', 2, 59.98);
+
+-- Retrieve a list of all books sold, including the book title, customer name, and date of sale.
+SELECT
+    B.Title AS BookTitle,
+    C.Name AS CustomerName,
+    S.DateOfSale
+FROM
+    Sales S
+JOIN
+    Books B ON S.BookID = B.BookID
+JOIN
+    Customers C ON S.CustomerID = C.CustomerID;
+
+-- Find the total revenue generated from each genre of books.
+SELECT
+    B.Genre,
+    SUM(S.TotalPrice) AS TotalRevenue
+FROM
+    Sales S
+JOIN
+    Books B ON S.BookID = B.BookID
+GROUP BY
+    B.Genre;
+
+-- Create a trigger to update QuantityInStock in the Books table after a new sale is recorded
+DELIMITER //
+CREATE TRIGGER UpdateQuantityInStock
+AFTER INSERT ON Sales
+FOR EACH ROW
+BEGIN
+    UPDATE Books
+    SET QuantityInStock = QuantityInStock - NEW.QuantitySold
+    WHERE BookID = NEW.BookID;
+END //
+DELIMITER ;
+
